@@ -1,0 +1,155 @@
+create database crime_db; 
+
+GO
+
+use crime_db; 
+
+GO 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] into crime_data from 
+
+(select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-01] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-02] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-03] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-04] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-05] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-06] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-07] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-08] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-09] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-10] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-11] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [17-12] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-01] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-02] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-03] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-04] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-05] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-06] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-07] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-08] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-09] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-10] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-11] union all 
+
+select [Crime ID], [Month], [Reported by], [Falls within], [Longitude], [Latitude], [Location], [LSOA code], [LSOA name], [Crime type], [Last outcome category], [Context] from [18-12]) x; 
+
+GO 
+
+alter table crime_data add ID integer identity; 
+
+alter table crime_data add constraint pkID primary key nonclustered(ID); 
+
+GO 
+
+alter table crime_data add Geolocation geography; 
+
+update crime_data set Geolocation=geography::Point([Latitude], [Longitude], 4326); 
+
+GO 
+
+
+-- Greater Manchester Crime Report 
+
+create view Crime_Report as 
+
+select x.[Crime type], x.[LSOA name], x.[Crime count], l.[All Ages] 
+
+from (select [LSOA code], [LSOA name], [Crime type], count(*) as [Crime count] from crime_data 
+
+group by [LSOA code], [LSOA name], [Crime type])x  
+
+inner join persons l on l.[Area Codes]=x.[LSOA code]; 
+
+GO 
+drop view Crime_Report
+select * from Crime_Report; 
+
+GO 
+
+
+--Vehicles Crime Report 
+
+create view VehicleCrimes as 
+
+select * from crime_data where [Crime type] = 'Vehicle crime'; 
+
+
+GO 
+
+select * from VehicleCrimes; 
+
+GO 
+
+ 
+-- Anti-Social Crime Report  
+
+create view AntiSocial AS 
+
+select * from crime_data where [Crime type] = 'Anti-social behaviour' and [LSOA name] like 'salford%'; 
+
+GO 
+
+select * from AntiSocial; 
+
+GO
+
+-- Database Security
+
+-- Create the principal investigator role
+create role principal_investigator
+
+-- Create the research analyst role
+create role research_analyst
+
+-- Grant select privileges to principal investigator role
+grant select, update, insert, create view, create table to principal_investigator
+
+-- Grant select privileges to research analyst role
+grant all privileges on crime_db to research_analyst
+
+GO
+
+-- Database backup
+backup database [crime_db] 
+to  disk = N'C:\Temp\crime_db' with noformat, 
+noinit,  
+name = N'crime_db-Full Database Backup', 
+skip, 
+norewind, 
+nounload,  
+stats = 10
+GO
+
+-- Restore database
+
+USE [master]
+RESTORE DATABASE [crime_db] 
+FROM  DISK = N'C:\Temp\crime_db' 
+WITH  FILE = 1,  
+NOUNLOAD,  
+STATS = 5
+
+GO

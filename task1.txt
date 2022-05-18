@@ -1,0 +1,165 @@
+-- Create Database
+create database Child_Poverty
+GO
+use Child_Poverty
+
+GO
+
+-- Procedure to create reference tables.
+
+create procedure reference_tables  as
+begin
+		begin transaction			
+
+			create table disablility (Value float, Label nvarchar(255));
+			create table polio (Value float, Label nvarchar(255));
+			create table carer_edu (Value float, Label nvarchar(255));
+			create table enrol (Value float, Label nvarchar(255));
+			create table income_loss (Value float, Label nvarchar(255));
+			create table clean_water (Value float, Label nvarchar(255));
+			create table health (Value float, Label nvarchar(255));
+			create table location (Value float, Label nvarchar(255));
+			create table country(code varchar(50) NOT NULL primary key, name nchar(20) NULL);
+			
+
+			insert into disablility (Value, Label) values (0, 'no'), (1, 'yes');
+			insert into polio (Value, Label) values (0, 'no'), (1, 'yes');
+			insert into carer_edu (Value, Label) values (0, 'no'), (1, 'yes');
+			insert into country (code, name) values ('PE', 'Peru'), ('VN', 'Vietnam'), ('ET', 'Ethiopia'), ('IN', 'India');
+			insert into enrol (Value, Label) values (0, 'no'), (1, 'yes'), (99,	'missing'), (77,	'N/A'), (88,	'N/A');
+			insert into income_loss (Value, Label) values (0, 'no'), (1, 'yes') ;
+			insert into clean_water (Value, Label) values (0, 'no'), (1, 'yes');
+			insert into health (Value, Label) values (1, 'very poor'), (2,	'poor'), (3,	'average'), (4,	'good'), (5, 'very good');
+			insert into location (Value, Label) values (1, 'urban'), (2, 'rural');
+
+		commit transaction
+end
+
+GO
+
+
+
+-- child information table.
+
+create procedure info_procedure  as
+begin
+		begin transaction			
+
+		create table child_information(childid varchar(50) , round varchar(50) ,primary key(childid,round), child_sex float, 
+		enrol float)
+
+			
+			INSERT INTO child_information (childid  , round  , child_sex,
+		enrol) (select  childid, round  , chsex,
+		enrol FROM ethiopia
+		union all
+			 select  childid, round  , chsex,
+		enrol FROM peru
+		union all
+			 select  childid, round  , chsex,
+		enrol FROM india
+		union all
+			 select  childid, round  , chsex,
+		enrol FROM vietnam)
+
+
+
+		commit transaction
+end
+GO
+
+
+select count(child_sex) from child_information where child_sex = 1
+
+exec  info_procedure
+
+
+-- Health Information table.
+GO
+create procedure household_procedure  as
+begin
+		begin transaction			
+
+
+		create table health_info(childid varchar(50) , polio_vacc float, child_health float, 
+		child_disable float)
+
+			
+			INSERT INTO health_info (childid  , polio  , chhealth,
+		enrol) (select  childid, polio  , chhealth,
+		chdisability FROM ethiopia
+		union all
+			 select  childid, polio  , chhealth,
+		chdisability FROM peru
+		union all
+			 select  childid, polio  , chhealth,
+		chdisability FROM india
+		union all
+			 select  childid, polio  , chhealth,
+		chdisability FROM vietnam)
+
+		commit transaction
+end
+GO
+
+drop procedure household_procedure
+drop table health_info
+-- Create carer info table.
+GO
+create procedure carer_procedure  as
+begin
+		begin transaction			
+
+			create table carer_info (childid varchar(50) NOT NULL, caresex float NULL, carecantread float NULL);
+
+			insert into carer_info select childid, caresex, carecantread from 
+				(select childid, caresex, carecantread from ethiopia
+				union all
+				select childid, caresex, carecantread from peru
+				union all
+				select childid, caresex, carecantread from india
+				union all
+				select childid, caresex, carecantread from vietnam) x;
+
+		commit transaction
+end
+GO
+drop procedure carer_procedure
+
+GO
+-- Create Household Information table.
+
+create procedure household_procedure  as
+begin
+		begin transaction			
+
+			create table household_info(childid varchar(50), cohort float, clean_water float, meals float, income_loss float)
+
+			insert into household_info select childid, yc, drwaterq_new, foodsec, shecon5 from 
+				(select childid, yc, drwaterq_new, foodsec, shecon5 from ethiopia
+				union all
+				select childid, yc, drwaterq, foodsec, shecon5 from peru
+				union all
+				select childid, yc, drwaterq, foodsec, shecon5 from india
+				union all
+				select childid, yc, drwaterq_new, foodsec, shecon5 from vietnam) x;
+
+		commit transaction
+end
+GO
+
+drop procedure household_procedure
+
+GO
+-- Executing all the procedures 
+
+exec reference_tables;
+exec info_procedure;
+exec household_procedure;
+exec carer_procedure;
+exec health_procedure;
+
+select * from child_information
+
+GO
+

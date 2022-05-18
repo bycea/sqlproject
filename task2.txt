@@ -1,0 +1,149 @@
+create database Vietnam_Education
+GO
+use Vietnam_Education
+GO
+
+-- Procedures for reports
+create procedure [dbo].[Table_Procedure]
+as
+begin
+
+	begin transaction
+
+		create table Meals_Table(value float,name nvarchar(40));
+		create table Gender_Table (Value float, Label nvarchar(300));
+		create table Etnicity_Table (Value float, Label nvarchar(300));
+
+	commit transaction
+
+end
+GO
+
+create procedure [dbo].[Insert_Table]
+as
+	begin
+		begin transaction
+
+		insert into Meals_Table(value,name) values (1,'1 Meal'),(2,'2 Meals'),(3,'At least 3 meals');
+		insert into Gender_Table (Value, Label) values (1, 'Male'), (2, 'Female');
+		insert into Etnicity_Table (Value, Label) values (1, 'Kinh'), (2, 'H`Mong'), (3, 'Cham-HRoi'), (4, 'Ede'), (5, 'Ba Na'), (6, 'Nung'), (7, 'Tay'), (8, 'Dao'), (9, 'Giay'), (10, 'Other'), (99, 'Missing'), (88, 'NA');
+
+		commit transaction
+	end
+
+GO
+
+exec [dbo].[Table_Procedure];
+exec [dbo].[Insert_Table];
+
+GO
+
+GO
+
+-- Measuring Students Maths Skills
+create view [dbo].[MathSkills] as
+
+	select x.Sex, x.[Math Score], count(*) as [Total] from 
+		(select CASE 
+			WHEN MATH_RAWSCORE < 15 then 'Below Average'
+			when MATH_RAWSCORE between 15 and 25 then 'Average'
+			when MATH_RAWSCORE between 25 and 35 then 'Above Average'
+			when MATH_RAWSCORE > 35 then 'Advanced'
+			else 'Not Available'
+			end as [Math Score], 
+			case	
+			when GENDER = 1 then 'Male'
+			when GENDER = 2 then 'Female'
+			else 'Not Available'
+			end as Sex from vietnam_table) x order by x.Sex, x.[Math Score];
+GO
+
+select * from [dbo].[MathSkills] order by Sex;
+
+GO
+
+-- Enrolment by Ethnicity
+
+create view [dbo].[Enrolment] AS 
+	select e.Label as Ethnicity,
+	count(*) as [Total Enrolment] from vietnam_table x
+	LEFT JOIN Etnicity_Table e on x.ethnicity=e.Value
+	group by e.Label;
+
+GO
+
+select * from [dbo].[Enrolment] order by [Total Enrolment] desc;
+
+GO
+
+
+-- Access to Meals 
+create view [dbo].[Meals] as 
+
+	select case 
+	when province = 1 THEN 'Ben Tre'
+	when province= 2 THEN 'Da Nang'
+	when province= 3 THEN 'Hung Yen'
+	when province= 4 THEN 'Lao Cai'
+	when province= 5 THEN 'Phu Yen'
+	else 'Not Available' end as province,  isnull(m.name, 'Not Available') as MealAccess,
+ count(*) as [count] from vietnam_table x
+left join Meals_Table m on x.STDMEAL=m.value group by province, m.name;
+
+
+GO
+
+select * from [dbo].[Meals] order by province;
+GO
+
+-- Database Security
+
+-- Create the school principal role
+create role principal
+
+-- Create the head teacher role
+create role teacher
+
+-- Create the data analyst role
+create role analyst
+
+-- Create the client role
+create role client
+
+-- Grant  privileges to school principal role
+grant select on dbo.vietnam_table to principal with grant option
+
+-- Grant  privileges to data analyst role
+grant all privileges on dbo.Vietnam_Education to analyst
+
+-- Grant  privileges to head teacher role
+grant select, update, insert on dbo.vietnam_table to teacher
+
+-- Grant  privileges to client role
+grant select, create view, create table on dbo.Vietnam_Education to client
+
+GO
+
+-- Database backup
+
+BACKUP DATABASE [Vietnam_Education] 
+TO  DISK = N'C:\Temp\Vietnam_Education' 
+WITH NOFORMAT, 
+NOINIT,  
+NAME = N'Vietnam_Education-Full Database Backup', 
+SKIP, 
+NOREWIND, 
+NOUNLOAD,  
+STATS = 10
+GO
+
+-- Restore database
+
+USE [master]
+RESTORE DATABASE [Vietnam_Education] 
+FROM  DISK = N'C:\Temp\Vietnam_Education' 
+WITH  FILE = 1,  
+NOUNLOAD,  
+STATS = 5
+
+GO
